@@ -2,10 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mkdenis.twitterclient">
 
-    <permission android:name="INTERNET"/>
-
-
-
+    <permission android:name="INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -21,6 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".UserActivity"></activity>
     </application>
 
 </manifest>
