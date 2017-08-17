@@ -2,4 +2,6 @@
     <string name="app_name">TwitterClient</string>
     <string name="com.twitter.sdk.android.CONSUMER_KEY">i837a0S8sWQ6fvNpwQfBbXl8u</string>
     <string name="com.twitter.sdk.android.CONSUMER_SECRET">MgZQFLFY6z04XFOvW0dl8cw1snSMAOInrOshBJ2sBuRnaJc0UE</string>
+    <string name="access_token">894895489522556929-qkz2rBuRTwV82frVcVXvP6E1SrvSWIm</string>
+    <string name="access_token_secret">k8Rzgz7R3uuoTxmvZWFUt4qYFS42gwYz1Dx4VZfhP1XBL</string>>
 </resources>

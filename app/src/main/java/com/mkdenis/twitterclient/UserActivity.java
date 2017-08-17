@@ -16,60 +16,62 @@ import com.twitter.sdk.android.tweetui.UserTimeline;
 
 public class UserActivity extends AppCompatActivity {
 
-    TextView user_name, user_email;
-    ListView user_timeline;
-    Button new_tweet;
+    private TextView userName, userEmail;
+    private ListView userTimeLine;
+    private Button newTweetButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
+        findView();
 
-        user_name = (TextView) findViewById(R.id.textView_user_name);
-        user_email = (TextView) findViewById(R.id.textView_user_email);
-        user_timeline = (ListView) findViewById(R.id.listView_user_timeline);
-        new_tweet = (Button) findViewById(R.id.button_new_tweet);
-
-        user_name.setText(LoginActivity.pref.getString("user_name", ""));
-        user_email.setText(LoginActivity.pref.getString("user_email", ""));
-        UpdateTimeLine(user_name.getText().toString(), user_timeline);
-
-        View.OnClickListener new_tweet_click = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // TODO Auto-generated method stub
-                final TwitterSession session = TwitterCore.getInstance().getSessionManager()
-                        .getActiveSession();
-                final Intent intent = new ComposerActivity.Builder(UserActivity.this)
-                        .session(session)
-                        .text("")
-                        .hashtags("")
-                        .createIntent();
-                startActivity(intent);
-            }
-        };
-        new_tweet.setOnClickListener(new_tweet_click);
+        userName.setText(PreferenceSettingsManager.getString("user_name"));
+        userEmail.setText(PreferenceSettingsManager.getString("user_email"));
+        updateTimeLine(userName.getText().toString(), userTimeLine);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        UpdateTimeLine(user_name.getText().toString(), user_timeline);
+        updateTimeLine(userName.getText().toString(), userTimeLine);
     }
 
+    private void findView() {
+        userName = (TextView) findViewById(R.id.textView_user_name);
+        userEmail = (TextView) findViewById(R.id.textView_user_email);
+        userTimeLine = (ListView) findViewById(R.id.listView_user_timeline);
+        newTweetButton = (Button) findViewById(R.id.button_new_tweet);
+        newTweetButton.setOnClickListener(onClickListener);
+    }
 
-    private void UpdateTimeLine(String user_name, ListView list_view)
+    private void updateTimeLine(String userName, ListView listView)
     {
         UserTimeline userTimeline = new UserTimeline.Builder()
-                .screenName(user_name)
+                .screenName(userName)
                 .build();
         TweetTimelineListAdapter adapter = new TweetTimelineListAdapter.Builder(this)
                 .setTimeline(userTimeline)
                 .build();
-        list_view.setAdapter(adapter);
+        listView.setAdapter(adapter);
     }
+
+    private final View.OnClickListener onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            // TODO Auto-generated method stub
+            switch (v.getId()) {
+                case R.id.button_new_tweet: {
+                    TwitterSession session = TwitterCore.getInstance().getSessionManager()
+                            .getActiveSession();
+                    Intent intent = new ComposerActivity.Builder(UserActivity.this)
+                            .session(session)
+                            .text("")
+                            .hashtags("")
+                            .createIntent();
+                    startActivity(intent);
+                    break;
+                }
+            }
+        }
+    };
 }
