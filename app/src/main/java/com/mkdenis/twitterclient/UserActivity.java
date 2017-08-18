@@ -28,6 +28,11 @@ public class UserActivity extends AppCompatActivity {
         userName.setText(PreferenceSettingsManager.getString("user_name"));
         userEmail.setText(PreferenceSettingsManager.getString("user_email"));
         updateTimeLine(userName.getText().toString(), userTimeLine);
+        try {
+            String response = TwitterRestAPI.getUserTimeline("KirichDev");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
