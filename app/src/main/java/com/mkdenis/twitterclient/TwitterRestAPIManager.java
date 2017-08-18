@@ -8,7 +8,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class TwitterRestAPI {
+public class TwitterRestAPIManager {
 
     private final static String TWITTER_TOKEN_URL = "https://api.twitter.com/oauth2/token";
     private final static String TWITTER_USER_TIMELINE_URL = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=";
