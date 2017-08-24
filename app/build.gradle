@@ -10,6 +10,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
         release {
@@ -38,5 +39,6 @@ dependencies {
     compile 'com.twitter.sdk.android:twitter-core:3.1.0'
     compile 'com.twitter.sdk.android:tweet-ui:3.1.0'
     compile 'com.twitter.sdk.android:tweet-composer:3.1.0'
+    compile 'com.squareup.picasso:picasso:2.5.2'
     testCompile 'junit:junit:4.12'
 }

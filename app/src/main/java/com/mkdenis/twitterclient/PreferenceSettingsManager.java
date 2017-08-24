@@ -27,4 +27,9 @@ public class PreferenceSettingsManager {
     public static String getString(String key) {
         return pref.getString(key, null);
     }
+
+    public static void clear(){
+        editor.clear();
+        editor.commit();
+    }
 }

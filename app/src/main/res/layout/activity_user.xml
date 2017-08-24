@@ -8,29 +8,51 @@
     tools:context="com.mkdenis.twitterclient.UserActivity">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         tools:layout_editor_absoluteX="8dp"
         tools:layout_editor_absoluteY="8dp">
 
-        <ImageView
-            android:id="@+id/imageView_avatar"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:srcCompat="@mipmap/ic_launcher" />
+            android:orientation="horizontal"
+            android:weightSum="1">
 
-        <TextView
-            android:id="@+id/textView_user_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="login" />
+            <ImageView
+                android:id="@+id/imageView_main_profile_image"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:adjustViewBounds="true"
+                android:paddingLeft="5dp"
+                android:paddingTop="5dp"
+                app:srcCompat="@mipmap/ic_launcher" />
 
-        <TextView
-            android:id="@+id/textView_user_email"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="email" />
+            <LinearLayout
+                android:layout_width="171dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="0.43"
+                android:orientation="vertical"
+                android:paddingLeft="10dp">
+
+                <TextView
+                    android:id="@+id/textView_user_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="login" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/button_logout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="LogOut" />
+
+        </LinearLayout>
 
         <Button
             android:id="@+id/button_new_tweet"
@@ -38,12 +60,18 @@
             android:layout_height="wrap_content"
             android:text="New Tweet" />
 
-        <ListView android:id="@+id/listView_user_timeline"
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/user_activity_swipe_refresh_layout"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:divider="#e1e8ed"
-            android:dividerHeight="1dp"
-            android:drawSelectorOnTop="false"/>
+            android:layout_height="wrap_content">
+            <ListView
+                android:id="@+id/listView_user_timeline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:divider="#e1e8ed"
+                android:dividerHeight="1dp"
+                android:drawSelectorOnTop="false" />
+        </android.support.v4.widget.SwipeRefreshLayout>
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
