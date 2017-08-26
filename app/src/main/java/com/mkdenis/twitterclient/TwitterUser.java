@@ -2,10 +2,10 @@ package com.mkdenis.twitterclient;
 
 
 public class TwitterUser {
-    private long id;
-    private String name;
-    private String screenName;
-    private String profileImageUrl;
+    private final long id;
+    private final String name;
+    private final String screenName;
+    private final String profileImageUrl;
 
     public TwitterUser (long id, String name, String screenName, String profileImageUrl){
         this.id = id;
@@ -15,14 +15,18 @@ public class TwitterUser {
     }
 
     public String getName(){
-        return this.name;
+        return name;
     }
 
     public String getScreenName(){
-        return this.screenName;
+        return screenName;
     }
 
     public String getProfileImageUrl(){
-        return this.profileImageUrl;
+        return profileImageUrl;
+    }
+
+    public long getId(){
+        return id;
     }
 }

@@ -2,10 +2,10 @@ package com.mkdenis.twitterclient;
 
 
 public class TwitterMedia {
-    private String type;
-    private String mediaUrl;
-    private int width;
-    private int hight;
+    private final String type;
+    private final String mediaUrl;
+    private final int width;
+    private final int hight;
 
     public TwitterMedia(String type, String mediaUrl, int width, int hight) {
         this.type = type;
@@ -15,6 +15,18 @@ public class TwitterMedia {
     }
 
     public String getUrl(){
-        return this.mediaUrl;
+        return mediaUrl;
+    }
+
+    public String getType(){
+        return type;
+    }
+
+    public int getWidth(){
+        return width;
+    }
+
+    public int getHight(){
+        return hight;
     }
 }

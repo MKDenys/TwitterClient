@@ -16,7 +16,9 @@ import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private  TwitterLoginButton loginButton;
+ //   private final static String CONSUMER_KEY = "i837a0S8sWQ6fvNpwQfBbXl8u";
+ //   private final static String CONSUMER_SECRET = "MgZQFLFY6z04XFOvW0dl8cw1snSMAOInrOshBJ2sBuRnaJc0UE";
+    private TwitterLoginButton loginButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +26,7 @@ public class LoginActivity extends AppCompatActivity {
         Twitter.initialize(this);
         setContentView(R.layout.activity_login);
         PreferenceSettingsManager.init(this);
+   //     TwitterRestAPIManager.getInstance().getApplicationOnlyToken(CONSUMER_KEY, CONSUMER_SECRET);
         loginButton = (TwitterLoginButton) findViewById(R.id.login_button);
         loginButton.setCallback(callbackTwitterSession);
         if (PreferenceSettingsManager.getString("oauth_token") != null)
@@ -50,7 +53,7 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         public void failure(TwitterException exception) {
-            Log.d("get token", exception.getMessage());
+            Log.d("get token", exception.toString());
         }
     };
 

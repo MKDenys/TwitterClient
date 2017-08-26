@@ -5,6 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class JSONParser {
 
@@ -20,19 +21,19 @@ public class JSONParser {
         return token;
     }
 
-    public static ArrayList<Tweet> parseTimeline(String jsonStr){
-        ArrayList<Tweet> tweets = new ArrayList<Tweet>();
-        ArrayList<TwitterMedia> media = new ArrayList<TwitterMedia>();
+    public static List<Tweet> parseTimeline(String jsonStr){
+        List<Tweet> tweets = new ArrayList<Tweet>();
+        List<TwitterMedia> media = new ArrayList<TwitterMedia>();
         try {
             JSONArray tweetsArray = new JSONArray(jsonStr);
             for (int i = 0; i < tweetsArray.length(); i++) {
+                media = new ArrayList<TwitterMedia>();
                 JSONObject tweetJSONObject = tweetsArray.getJSONObject(i);
                 String reply = tweetJSONObject.getString("in_reply_to_status_id");
                 if (reply != "null")
                     continue;
-                JSONObject entities = tweetJSONObject.getJSONObject("entities");
                 try {
-                    media = new ArrayList<TwitterMedia>();
+                    JSONObject entities = tweetJSONObject.getJSONObject("extended_entities");
                     JSONArray mediaArray = entities.getJSONArray("media");
                     for (int j = 0; j < mediaArray.length(); j++) {
                         String mediaType = mediaArray.getJSONObject(j).getString("type");

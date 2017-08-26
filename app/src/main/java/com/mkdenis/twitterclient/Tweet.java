@@ -7,20 +7,19 @@ import java.util.Date;
 import java.util.List;
 
 public class Tweet {
-    private long id;
-    private String createdTime;
-    private String text;
-    private int retweet_count;
-    private int favorite_count;
-    private boolean retweeted;
-    private boolean favorited;
-    private TwitterUser twitterUser;
-    private List<TwitterMedia> twitterMedia;
+    private final long id;
+    private final Date createdTime;
+    private final String text;
+    private final int retweet_count;
+    private final int favorite_count;
+    private final boolean retweeted;
+    private final boolean favorited;
+    private final TwitterUser twitterUser;
+    private final List<TwitterMedia> twitterMedia;
 
     public Tweet(long id, String createdTime, String text, int retweet_count, int favorite_count,
                  boolean retweeted, boolean favorited, TwitterUser twitterUser, List<TwitterMedia> twitterMedia){
         this.id = id;
-        this.createdTime = createdTime;
         this.text = text;
         this.retweet_count = retweet_count;
         this.favorite_count = favorite_count;
@@ -28,25 +27,28 @@ public class Tweet {
         this.favorited = favorited;
         this.twitterUser = twitterUser;
         this.twitterMedia = twitterMedia;
+        this.createdTime = dateFromTwitterFormatString(createdTime);
+    }
+
+    private Date dateFromTwitterFormatString(String dateStr){
+        DateFormat dateFormat = new SimpleDateFormat(
+                "EEE MMM dd HH:mm:ss zzzz yyyy");
+        Date datetime = null;
+        try {
+            datetime = dateFormat.parse(dateStr);
+        }
+        catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return datetime;
     }
 
     public TwitterUser getUser(){
         return this.twitterUser;
     }
 
-    public String getCreatedTime(){
-        DateFormat dateFormat = new SimpleDateFormat(
-                "EEE MMM dd HH:mm:ss zzzz yyyy");
-        Date datetime = null;
-        String timeStr = "";
-        try {
-            datetime = dateFormat.parse(this.createdTime);
-            dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yy");
-            timeStr = dateFormat.format(datetime);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return timeStr;
+    public Date getCreatedTime(){
+        return this.createdTime;
     }
 
     public String getText(){
@@ -61,11 +63,8 @@ public class Tweet {
         return this.favorite_count;
     }
 
-    public TwitterMedia getMedia(){
-        if (twitterMedia.size() != 0)
-            return this.twitterMedia.get(0);
-        else
-            return null;
+    public List<TwitterMedia> getMedia(){
+            return this.twitterMedia;
     }
 
     public long getId(){

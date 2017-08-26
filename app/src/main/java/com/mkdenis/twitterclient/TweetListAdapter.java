@@ -2,50 +2,107 @@ package com.mkdenis.twitterclient;
 
 
 import android.content.Context;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.List;
 
-import java.util.ArrayList;
+public class TweetListAdapter extends RecyclerView.Adapter<TweetListAdapter.ViewHolder> {
+    private final List<Tweet> tweets;
+    private final Context context;
+    private final int VIEW_ITEM = 0;
 
-public class TweetListAdapter extends BaseAdapter {
-    private Context context;
-    private ArrayList<Tweet> tweets = null;
-    private LayoutInflater layoutInflater;
-    private ImageView userProfileImage, tweetImage;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        private TextView textViewName;
+        private TextView textViewScreenName;
+        private TextView textViewCreatedTime;
+        private TextView textViewTweetText;
+        private TextView textViewRetweetCount;
+        private TextView textViewFavoriteCount;
+        private ImageView imageViewUserProfileImage;
+        private LinearLayout linearLayoutImageParent;
 
-    public TweetListAdapter(Context context, ArrayList<Tweet> tweets){
-        this.context = context;
-        this.tweets = tweets;
-        layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        public ViewHolder(View view) {
+            super(view);
+            textViewName = (TextView) view.findViewById(R.id.textView_name);
+            textViewScreenName = (TextView) view.findViewById(R.id.textView_screen_name);
+            textViewCreatedTime = (TextView) view.findViewById(R.id.textView_created_time);
+            textViewTweetText = (TextView) view.findViewById(R.id.textView_tweet_text);
+            textViewRetweetCount = (TextView) view.findViewById(R.id.textView_retweet_count);
+            textViewFavoriteCount = (TextView) view.findViewById(R.id.textView_favorite_count);
+            imageViewUserProfileImage = (ImageView) view.findViewById(R.id.imageView_profile_image);
+            linearLayoutImageParent = (LinearLayout) view.findViewById(R.id.image_parent_layout);
+        }
     }
 
-    public void addArrayListToBottom(ArrayList<Tweet> newTweets){
+    public static class ProgressViewHolder extends TweetListAdapter.ViewHolder {
+        public ProgressBar progressBar;
+        public ProgressViewHolder(View view) {
+            super(view);
+            progressBar = (ProgressBar)view.findViewById(R.id.more_progress);
+        }
+    }
+
+    public TweetListAdapter(Context context, List<Tweet> tweets){
+        this.context = context;
+        this.tweets = tweets;
+    }
+
+    public TweetListAdapter(Context context){
+        this.context = context;
+        this.tweets = null;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (tweets != null)
+            if (position == tweets.size() - 1)
+                return 1;
+            else
+                return 0;
+        else
+            return 1;
+    }
+
+    public void addListToBottom(List<Tweet> newTweets){
         tweets.addAll(newTweets);
         this.notifyDataSetChanged();
     }
 
-    public void addArrayListToTop(ArrayList<Tweet> newTweets){
-        tweets.addAll(0, newTweets);
+    public void addListToTop(List<Tweet> newTweets){
+        if (tweets != null)
+            tweets.addAll(0, newTweets);
         this.notifyDataSetChanged();
     }
 
-    @Override
-    public int getCount() {
+    public long getNewestTweetId(){
         if (tweets != null)
-            return tweets.size();
+            return tweets.get(0).getId();
+        else
+            return 0;
+    }
+
+    public long getOldestTweetId(){
+        if (tweets != null)
+            return tweets.get(tweets.size() - 1).getId();
         else
             return 0;
     }
 
     @Override
-    public Object getItem(int position) {
-        return tweets.get(position);
+    public int getItemCount() {
+        if (tweets != null)
+            return tweets.size();
+        else
+            return 1;
     }
 
     @Override
@@ -54,29 +111,46 @@ public class TweetListAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View view = convertView;
-        if (view == null) {
-            view = layoutInflater.inflate(R.layout.tweet, parent, false);
+    public TweetListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        TweetListAdapter.ViewHolder viewHolder;
+        if(viewType == VIEW_ITEM) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.tweet, parent, false);
+            viewHolder = new ViewHolder(view);
+        }else {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.progress_bar, parent, false);
+            viewHolder = new ProgressViewHolder(view);
         }
+        return viewHolder;
+    }
 
-        Tweet tweet = tweets.get(position);
-        TwitterUser user = tweet.getUser();
-        TwitterMedia media = tweet.getMedia();
-        ((TextView) view.findViewById(R.id.textView_name)).setText(user.getName());
-        ((TextView) view.findViewById(R.id.textView_screen_name)).setText("@" + user.getScreenName());
-        ((TextView) view.findViewById(R.id.textView_created_time)).setText(tweet.getCreatedTime());
-        ((TextView) view.findViewById(R.id.textView_tweet_text)).setText(tweet.getText());
-        ((TextView) view.findViewById(R.id.textView_retweet_count)).setText(String.valueOf(tweet.getRetweetCount()));
-        ((TextView) view.findViewById(R.id.textView_favorite_count)).setText(String.valueOf(tweet.getFavoriteCount()));
-        userProfileImage = (ImageView) view.findViewById(R.id.imageView_profile_image);
-        tweetImage = (ImageView) view.findViewById(R.id.imageView_tweet_image);
-        Picasso.with(context).load(user.getProfileImageUrl()).into(userProfileImage);
-        if (media != null) {
-            tweetImage.setVisibility(View.VISIBLE);
-            Picasso.with(context).load(media.getUrl()).into(tweetImage);
-        } else
-            tweetImage.setVisibility(View.GONE);
-        return view;
+    @Override
+    public void onBindViewHolder(TweetListAdapter.ViewHolder holder, int position) {
+
+        if(holder instanceof ProgressViewHolder){
+            ((ProgressViewHolder) holder).progressBar.setIndeterminate(true);
+        }else{
+            Tweet tweet = tweets.get(position);
+            TwitterUser user = tweet.getUser();
+            List<TwitterMedia> media = tweet.getMedia();
+            DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yy");
+            String tweetCreatedTime = dateFormat.format(tweet.getCreatedTime());
+            holder.textViewName.setText(user.getName());
+            holder.textViewScreenName.setText("@" + user.getScreenName());
+            holder.textViewCreatedTime.setText(tweetCreatedTime);
+            holder.textViewTweetText.setText(tweet.getText());
+            holder.textViewRetweetCount.setText(String.valueOf(tweet.getRetweetCount()));
+            holder.textViewFavoriteCount.setText(String.valueOf(tweet.getFavoriteCount()));
+            ImageLazyLoader imageLazyLoader = new ImageLazyLoaderAdapter();
+            imageLazyLoader.loadImageFromUrl(context, user.getProfileImageUrl(),
+                    holder.imageViewUserProfileImage);
+
+            holder.linearLayoutImageParent.removeAllViews();
+            for (int i = 0; i < media.size(); i++) {
+                ImageView imageView = new ImageView(context);
+                imageLazyLoader.loadImageFromUrl(context, media.get(i).getUrl(),
+                        imageView);
+                holder.linearLayoutImageParent.addView(imageView);
+            }
+        }
     }
 }

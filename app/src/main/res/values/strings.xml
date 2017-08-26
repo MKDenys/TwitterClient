@@ -2,7 +2,4 @@
     <string name="app_name">TwitterClient</string>
     <string name="com.twitter.sdk.android.CONSUMER_KEY">i837a0S8sWQ6fvNpwQfBbXl8u</string>
     <string name="com.twitter.sdk.android.CONSUMER_SECRET">MgZQFLFY6z04XFOvW0dl8cw1snSMAOInrOshBJ2sBuRnaJc0UE</string>
-    <string name="HOME_TIMELINE_URL">https://api.twitter.com/1.1/statuses/home_timeline.json</string>
-    <string name="USER_TIMELINE_URL">https://api.twitter.com/1.1/statuses/user_timeline.json</string>
-    <string name="PROFILE_URL">https://api.twitter.com/1.1/users/lookup.json?screen_name=</string>
 </resources>
