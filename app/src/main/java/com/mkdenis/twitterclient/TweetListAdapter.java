@@ -1,55 +1,27 @@
 package com.mkdenis.twitterclient;
 
-
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
+import java.net.HttpURLConnection;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
-public class TweetListAdapter extends RecyclerView.Adapter<TweetListAdapter.ViewHolder> {
+public class TweetListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final List<Tweet> tweets;
     private final Context context;
-    private final int VIEW_ITEM = 0;
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        private TextView textViewName;
-        private TextView textViewScreenName;
-        private TextView textViewCreatedTime;
-        private TextView textViewTweetText;
-        private TextView textViewRetweetCount;
-        private TextView textViewFavoriteCount;
-        private ImageView imageViewUserProfileImage;
-        private LinearLayout linearLayoutImageParent;
-
-        public ViewHolder(View view) {
-            super(view);
-            textViewName = (TextView) view.findViewById(R.id.textView_name);
-            textViewScreenName = (TextView) view.findViewById(R.id.textView_screen_name);
-            textViewCreatedTime = (TextView) view.findViewById(R.id.textView_created_time);
-            textViewTweetText = (TextView) view.findViewById(R.id.textView_tweet_text);
-            textViewRetweetCount = (TextView) view.findViewById(R.id.textView_retweet_count);
-            textViewFavoriteCount = (TextView) view.findViewById(R.id.textView_favorite_count);
-            imageViewUserProfileImage = (ImageView) view.findViewById(R.id.imageView_profile_image);
-            linearLayoutImageParent = (LinearLayout) view.findViewById(R.id.image_parent_layout);
-        }
-    }
-
-    public static class ProgressViewHolder extends TweetListAdapter.ViewHolder {
-        public ProgressBar progressBar;
-        public ProgressViewHolder(View view) {
-            super(view);
-            progressBar = (ProgressBar)view.findViewById(R.id.more_progress);
-        }
-    }
+    private final static int VIEW_TWEET = 0;
+    private final static int VIEW_PROGRESS_BAR = 1;
+    private final static String DISPLAY_DATE_FORMAT = "HH:mm:ss dd.MM.yy";
 
     public TweetListAdapter(Context context, List<Tweet> tweets){
         this.context = context;
@@ -63,59 +35,63 @@ public class TweetListAdapter extends RecyclerView.Adapter<TweetListAdapter.View
 
     @Override
     public int getItemViewType(int position) {
-        if (tweets != null)
-            if (position == tweets.size() - 1)
-                return 1;
+        if (this.tweets != null)
+            if (position == this.tweets.size() - 1)
+                return VIEW_PROGRESS_BAR;
             else
-                return 0;
+                return VIEW_TWEET;
         else
-            return 1;
+            return VIEW_PROGRESS_BAR;
     }
 
     public void addListToBottom(List<Tweet> newTweets){
-        tweets.addAll(newTweets);
+        this.tweets.addAll(newTweets);
         this.notifyDataSetChanged();
     }
 
     public void addListToTop(List<Tweet> newTweets){
-        if (tweets != null)
-            tweets.addAll(0, newTweets);
+        if (this.tweets != null)
+            this.tweets.addAll(0, newTweets);
         this.notifyDataSetChanged();
     }
 
     public long getNewestTweetId(){
-        if (tweets != null)
-            return tweets.get(0).getId();
+        if (this.tweets != null)
+            return this.tweets.get(0).getId();
         else
             return 0;
     }
 
     public long getOldestTweetId(){
-        if (tweets != null)
-            return tweets.get(tweets.size() - 1).getId();
+        if (this.tweets != null)
+            return this.tweets.get(this.tweets.size() - 1).getId();
         else
             return 0;
     }
 
+    public List<Tweet> getTweets(){
+        return tweets;
+    }
+
     @Override
     public int getItemCount() {
-        if (tweets != null)
-            return tweets.size();
+        if (this.tweets != null)
+            return this.tweets.size();
         else
             return 1;
     }
 
     @Override
     public long getItemId(int position) {
-        return tweets.get(position).getId();
+        return this.tweets.get(position).getId();
     }
 
     @Override
-    public TweetListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        TweetListAdapter.ViewHolder viewHolder;
-        if(viewType == VIEW_ITEM) {
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        RecyclerView.ViewHolder viewHolder;
+        if(viewType == VIEW_TWEET) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.tweet, parent, false);
-            viewHolder = new ViewHolder(view);
+            viewHolder = new TweetViewHolder(view);
         }else {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.progress_bar, parent, false);
             viewHolder = new ProgressViewHolder(view);
@@ -124,33 +100,98 @@ public class TweetListAdapter extends RecyclerView.Adapter<TweetListAdapter.View
     }
 
     @Override
-    public void onBindViewHolder(TweetListAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
 
         if(holder instanceof ProgressViewHolder){
             ((ProgressViewHolder) holder).progressBar.setIndeterminate(true);
         }else{
-            Tweet tweet = tweets.get(position);
+            final TweetViewHolder tweetHolder = (TweetViewHolder) holder;
+            final Tweet tweet = tweets.get(position);
             TwitterUser user = tweet.getUser();
-            List<TwitterMedia> media = tweet.getMedia();
-            DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yy");
+            DateFormat dateFormat = new SimpleDateFormat(DISPLAY_DATE_FORMAT, Locale.getDefault());
             String tweetCreatedTime = dateFormat.format(tweet.getCreatedTime());
-            holder.textViewName.setText(user.getName());
-            holder.textViewScreenName.setText("@" + user.getScreenName());
-            holder.textViewCreatedTime.setText(tweetCreatedTime);
-            holder.textViewTweetText.setText(tweet.getText());
-            holder.textViewRetweetCount.setText(String.valueOf(tweet.getRetweetCount()));
-            holder.textViewFavoriteCount.setText(String.valueOf(tweet.getFavoriteCount()));
-            ImageLazyLoader imageLazyLoader = new ImageLazyLoaderAdapter();
-            imageLazyLoader.loadImageFromUrl(context, user.getProfileImageUrl(),
-                    holder.imageViewUserProfileImage);
-
-            holder.linearLayoutImageParent.removeAllViews();
-            for (int i = 0; i < media.size(); i++) {
-                ImageView imageView = new ImageView(context);
-                imageLazyLoader.loadImageFromUrl(context, media.get(i).getUrl(),
-                        imageView);
-                holder.linearLayoutImageParent.addView(imageView);
+            tweetHolder.textViewName.setText(user.getName());
+            String screenName = "@" + user.getScreenName();
+            tweetHolder.textViewScreenName.setText(screenName);
+            tweetHolder.textViewCreatedTime.setText(tweetCreatedTime);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                tweetHolder.textViewTweetText.setText(Html.fromHtml(tweet.getText(), Html. FROM_HTML_MODE_LEGACY));
+            } else {
+                tweetHolder.textViewTweetText.setText(Html.fromHtml(tweet.getText()));
             }
+            tweetHolder.textViewRetweetCount.setText(String.valueOf(tweet.getRetweetCount()));
+            tweetHolder.textViewFavoriteCount.setText(String.valueOf(tweet.getFavoriteCount()));
+            ImageLazyLoader imageLazyLoader = new PicassoImageLazyLoader(this.context);
+            imageLazyLoader.loadImageFromUrl(user.getProfileImageUrl(), tweetHolder.imageViewUserProfileImage);
+
+            List<TwitterMedia> mediaList = tweet.getMedia();
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            tweetHolder.imageContainer.removeAllViews();
+            for (int i = 0; i < mediaList.size(); i++) {
+                TwitterMedia twitterMedia =  mediaList.get(i);
+                layoutParams.setMargins(20, 20, 20, 20);
+                layoutParams.gravity = Gravity.CENTER;
+                ImageView imageView = new ImageView(this.context);
+                imageLazyLoader.loadImageFromUrl(twitterMedia.getUrl(), imageView);
+                imageView.setLayoutParams(layoutParams);
+                tweetHolder.imageContainer.addView(imageView);
+            }
+            if (tweet.getFavorited())
+                tweetHolder.imageViewFavorite.setImageResource(R.mipmap.favorited);
+            else
+                tweetHolder.imageViewFavorite.setImageResource(R.mipmap.favorite);
+            tweetHolder.imageViewFavorite.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        String url = "";
+                        if (tweet.getFavorited())
+                            url = TwitterAPIURL.FAVORITES_DESTROY + getItemId(position);
+                        else
+                            url = TwitterAPIURL.FAVORITES_CREATE + getItemId(position);
+                        final HttpURLConnection connection = TwitterRestAPIManager.getInstance().
+                                httpRequestTwitterAPI(HTTPMethods.POST, url);
+                        WriteRequest writeRequest = new WriteRequest(connection, "", new OnEventListener() {
+                            @Override
+                            public void onSuccess(Object object) {
+                                ReadResponse readResponse = new ReadResponse(connection, new OnEventListener() {
+                                    @Override
+                                    public void onSuccess(Object object) {
+                                        if (tweet.getFavorited()) {
+                                            tweetHolder.imageViewFavorite.setImageResource(R.mipmap.favorite);
+                                            tweetHolder.textViewFavoriteCount.setText(
+                                                    String.valueOf(tweet.getFavoriteCount() - 1));
+                                            tweets.get(position).setFavorited(false);
+                                            tweets.get(position).setFavoriteCount(tweet.getFavoriteCount() - 1);
+                                        } else {
+                                            tweetHolder.imageViewFavorite.setImageResource(R.mipmap.favorited);
+                                            tweetHolder.textViewFavoriteCount.setText(
+                                                    String.valueOf(tweet.getFavoriteCount() + 1));
+                                            tweets.get(position).setFavorited(true);
+                                            tweets.get(position).setFavoriteCount(tweet.getFavoriteCount() + 1);
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(Exception e) {
+
+                                    }
+                                });
+                                readResponse.execute();
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+
+                            }
+                        });
+                        writeRequest.execute();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         }
     }
 }

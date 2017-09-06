@@ -7,5 +7,6 @@ public final class TwitterAPIURL {
     public static final String HOME_TIMELINE = BASE + "statuses/home_timeline.json";
     public static final String USER_TIMELINE = BASE + "statuses/user_timeline.json?screen_name=";
     public static final String PROFILE = BASE + "users/lookup.json?screen_name=";
-    public static final String APPLICATION_ONLY_OAUTH = "https://api.twitter.com/oauth2/token";
+    public static final String FAVORITES_CREATE = BASE + "favorites/create.json?id=";
+    public static final String FAVORITES_DESTROY = BASE + "favorites/destroy.json?id=";
 }

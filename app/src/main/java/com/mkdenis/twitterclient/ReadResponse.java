@@ -2,6 +2,7 @@ package com.mkdenis.twitterclient;
 
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -11,12 +12,10 @@ public class ReadResponse extends AsyncTask<Void, Void, String> {
     private HttpURLConnection httpURLConnection;
     private OnEventListener callBack;
     private Exception exception;
-    private int eventType;
 
-    public ReadResponse(HttpURLConnection httpURLConnection, OnEventListener callback, int eventType) {
+    public ReadResponse(HttpURLConnection httpURLConnection, OnEventListener callback) {
         this.httpURLConnection = httpURLConnection;
         this.callBack = callback;
-        this.eventType = eventType;
     }
 
     @Override
@@ -24,7 +23,7 @@ public class ReadResponse extends AsyncTask<Void, Void, String> {
         BufferedReader br = null;
         try {
             StringBuilder str = new StringBuilder();
-            br = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
+            br = new BufferedReader(new InputStreamReader(this.httpURLConnection.getInputStream()));
             String line = "";
             while((line = br.readLine()) != null) {
                 str.append(line + System.getProperty("line.separator"));
@@ -39,7 +38,7 @@ public class ReadResponse extends AsyncTask<Void, Void, String> {
                 try {
                     br.close();
                 } catch (Exception exception) {
-                    this.exception = exception;
+                    Log.d("!!!!!!!!!!!!!!!", "doInBackground: " + exception.toString());
                 }
             }
         }
@@ -47,11 +46,11 @@ public class ReadResponse extends AsyncTask<Void, Void, String> {
     }
 
     protected void onPostExecute(String jsonStr) {
-        if (callBack != null) {
-            if (exception == null) {
-                callBack.onSuccess(jsonStr, eventType);
+        if (this.callBack != null) {
+            if (this.exception == null) {
+                this.callBack.onSuccess(jsonStr);
             } else {
-                callBack.onFailure(exception);
+                this.callBack.onFailure(this.exception);
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.mkdenis.twitterclient;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
@@ -11,21 +12,19 @@ public class WriteRequest extends AsyncTask<Void, Void, Boolean> {
     private String textBody;
     private OnEventListener callBack;
     private Exception exception;
-    private int eventType;
 
-    public WriteRequest(HttpURLConnection httpURLConnection, String textBody, OnEventListener callback, int eventType) {
+    public WriteRequest(HttpURLConnection httpURLConnection, String textBody, OnEventListener callback) {
         this.httpURLConnection = httpURLConnection;
         this.textBody = textBody;
         this.callBack = callback;
-        this.eventType = eventType;
     }
 
     @Override
     protected Boolean doInBackground(Void...connection) {
         BufferedWriter wr = null;
         try {
-            wr = new BufferedWriter(new OutputStreamWriter(httpURLConnection.getOutputStream()));
-            wr.write(textBody);
+            wr = new BufferedWriter(new OutputStreamWriter(this.httpURLConnection.getOutputStream()));
+            wr.write(this.textBody);
             wr.flush();
             return true;
         }
@@ -37,7 +36,7 @@ public class WriteRequest extends AsyncTask<Void, Void, Boolean> {
                 try {
                     wr.close();
                 } catch (Exception exception) {
-                    this.exception = exception;
+                    Log.d("!!!!!!!!!!!!!!!", "doInBackground: " + exception);
                 }
             }
         }
@@ -45,11 +44,11 @@ public class WriteRequest extends AsyncTask<Void, Void, Boolean> {
     }
 
     protected void onPostExecute(Boolean writeRequest) {
-        if (callBack != null) {
+        if (this.callBack != null) {
             if (exception == null) {
-                callBack.onSuccess(writeRequest, eventType);
+                this.callBack.onSuccess(writeRequest);
             } else {
-                callBack.onFailure(exception);
+                this.callBack.onFailure(this.exception);
             }
         }
     }

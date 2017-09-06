@@ -1,7 +1,9 @@
 package com.mkdenis.twitterclient;
 
 
-public class TwitterUser {
+import java.io.Serializable;
+
+public class TwitterUser implements Serializable {
     private final long id;
     private final String name;
     private final String screenName;
@@ -15,18 +17,18 @@ public class TwitterUser {
     }
 
     public String getName(){
-        return name;
+        return this.name;
     }
 
     public String getScreenName(){
-        return screenName;
+        return this.screenName;
     }
 
     public String getProfileImageUrl(){
-        return profileImageUrl;
+        return this.profileImageUrl;
     }
 
     public long getId(){
-        return id;
+        return this.id;
     }
 }

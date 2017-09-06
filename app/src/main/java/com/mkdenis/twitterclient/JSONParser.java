@@ -1,5 +1,7 @@
 package com.mkdenis.twitterclient;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -9,74 +11,112 @@ import java.util.List;
 
 public class JSONParser {
 
-    public static String parseAccessToken(String jsonStr){
-        JSONObject jsonObject;
-        String token;
+    private static final String KEY_IN_REPLY_TO_STATUS_ID = "in_reply_to_status_id";
+    private static final String KEY_EXTENDED_ENTITIES = "extended_entities";
+    private static final String KEY_ENTITIES = "entities";
+    private static final String KEY_MEDIA = "media";
+    private static final String KEY_TYPE = "type";
+    private static final String KEY_MEDIA_URL_HTTPS = "media_url_https";
+    private static final String KEY_SIZES = "sizes";
+    private static final String KEY_MEDIUM = "medium";
+    private static final String KEY_WIDTH = "w";
+    private static final String KEY_HEIGHT = "h";
+    private static final String KEY_USER = "user";
+    private static final String KEY_ID = "id";
+    private static final String KEY_NAME = "name";
+    private static final String KEY_SCREEN_NAME = "screen_name";
+    private static final String KEY_PROFILE_IMAGE_URL_HTTPS = "profile_image_url_https";
+    private static final String KEY_CREATED_AT = "created_at";
+    private static final String KEY_TEXT = "text";
+    private static final String KEY_RETWEET_COUNT = "retweet_count";
+    private static final String KEY_FAVORITE_COUNT = "favorite_count";
+    private static final String KEY_RETWEETED = "retweeted";
+    private static final String KEY_FAVORITED = "favorited";
+    private static final String KEY_URLS = "urls";
+    private static final String KEY_URL = "url";
+    private static final String KEY_EXPANDED_URL = "expanded_url";
+    private static final String KEY_DISPLAY_URL = "display_url";
+    private static final String NULL = "null";
+
+    private List<TweetUrl> parseUrls(JSONArray jsonArray){
+        List<TweetUrl> tweetUrlList = new ArrayList<TweetUrl>();
         try {
-            jsonObject = new JSONObject(jsonStr);
-            token = jsonObject.getString("access_token");
-        } catch (JSONException e) {
-            token = "";
+            for (int j = 0; j < jsonArray.length(); j++) {
+                String url = jsonArray.getJSONObject(j).getString(KEY_URL);
+                String expandedUrl = jsonArray.getJSONObject(j).getString(KEY_EXPANDED_URL);
+                String displayUrl = jsonArray.getJSONObject(j).getString(KEY_DISPLAY_URL);
+                tweetUrlList.add(new TweetUrl(url, expandedUrl, displayUrl));
+            }
         }
-        return token;
+        catch (Exception e){
+            Log.d("!!!!!!!!!!!!!!!", "getUrls: " + e.toString());
+        }
+        return tweetUrlList;
     }
 
-    public static List<Tweet> parseTimeline(String jsonStr){
+    public List<Tweet> parseTimeline(String jsonStr){
         List<Tweet> tweets = new ArrayList<Tweet>();
-        List<TwitterMedia> media = new ArrayList<TwitterMedia>();
+        List<TwitterMedia> mediaList;
+        List<TweetUrl> tweetUrlList;
+        List<TweetUrl> mediaUrlList;
         try {
             JSONArray tweetsArray = new JSONArray(jsonStr);
             for (int i = 0; i < tweetsArray.length(); i++) {
-                media = new ArrayList<TwitterMedia>();
+                mediaList = new ArrayList<TwitterMedia>();
+                tweetUrlList = new ArrayList<TweetUrl>();
                 JSONObject tweetJSONObject = tweetsArray.getJSONObject(i);
-                String reply = tweetJSONObject.getString("in_reply_to_status_id");
-                if (reply != "null")
+                String reply = tweetJSONObject.getString(KEY_IN_REPLY_TO_STATUS_ID);
+                if (reply != NULL)
                     continue;
                 try {
-                    JSONObject entities = tweetJSONObject.getJSONObject("extended_entities");
-                    JSONArray mediaArray = entities.getJSONArray("media");
+                    JSONObject entities = tweetJSONObject.getJSONObject(KEY_ENTITIES);
+                    JSONArray urlArray = entities.getJSONArray(KEY_URLS);
+                    tweetUrlList = parseUrls(urlArray);
+                    JSONObject extendedEntities = tweetJSONObject.getJSONObject(KEY_EXTENDED_ENTITIES);
+                    JSONArray mediaArray = extendedEntities.getJSONArray(KEY_MEDIA);
                     for (int j = 0; j < mediaArray.length(); j++) {
-                        String mediaType = mediaArray.getJSONObject(j).getString("type");
-                        String mediaUrl = mediaArray.getJSONObject(j).getString("media_url_https");
-                        JSONObject size = mediaArray.getJSONObject(j).getJSONObject("sizes");
-                        JSONObject medium = size.getJSONObject("medium");
-                        int width = medium.getInt("w");
-                        int hight = medium.getInt("h");
-                        media.add(j, new TwitterMedia(mediaType, mediaUrl, width, hight));
+                        mediaUrlList = parseUrls(mediaArray);
+                        String mediaType = mediaArray.getJSONObject(j).getString(KEY_TYPE);
+                        String mediaUrl = mediaArray.getJSONObject(j).getString(KEY_MEDIA_URL_HTTPS);
+                        JSONObject size = mediaArray.getJSONObject(j).getJSONObject(KEY_SIZES);
+                        JSONObject medium = size.getJSONObject(KEY_MEDIUM);
+                        int width = medium.getInt(KEY_WIDTH);
+                        int height = medium.getInt(KEY_HEIGHT);
+                        mediaList.add(new TwitterMedia(mediaType, mediaUrl, width, height, mediaUrlList));
                     }
                 }
                 catch (Exception e) {}
-                JSONObject userJSONObject = tweetJSONObject.getJSONObject("user");
-                long idUser = userJSONObject.getLong("id");
-                String name = userJSONObject.getString("name");
-                String screenName = userJSONObject.getString("screen_name");
-                String profileImageUrl = userJSONObject.getString("profile_image_url_https");
+                JSONObject userJSONObject = tweetJSONObject.getJSONObject(KEY_USER);
+                long idUser = userJSONObject.getLong(KEY_ID);
+                String name = userJSONObject.getString(KEY_NAME);
+                String screenName = userJSONObject.getString(KEY_SCREEN_NAME);
+                String profileImageUrl = userJSONObject.getString(KEY_PROFILE_IMAGE_URL_HTTPS);
                 TwitterUser user = new TwitterUser(idUser, name, screenName, profileImageUrl);
-                long idTweet = tweetJSONObject.getLong("id");
-                String createdTime = tweetJSONObject.getString("created_at");
-                String text = tweetJSONObject.getString("text");
-                int retweetCount = tweetJSONObject.getInt("retweet_count");
-                int favoriteCount = tweetJSONObject.getInt("favorite_count");
-                boolean retweeted = tweetJSONObject.getBoolean("retweeted");
-                boolean favorited = tweetJSONObject.getBoolean("favorited");
-                tweets.add(tweets.size(), new Tweet(idTweet, createdTime, text, retweetCount, favoriteCount,
-                        retweeted, favorited, user, media));
+                long idTweet = tweetJSONObject.getLong(KEY_ID);
+                String createdTime = tweetJSONObject.getString(KEY_CREATED_AT);
+                String text = tweetJSONObject.getString(KEY_TEXT);
+                int retweetCount = tweetJSONObject.getInt(KEY_RETWEET_COUNT);
+                int favoriteCount = tweetJSONObject.getInt(KEY_FAVORITE_COUNT);
+                boolean retweeted = tweetJSONObject.getBoolean(KEY_RETWEETED);
+                boolean favorited = tweetJSONObject.getBoolean(KEY_FAVORITED);
+                tweets.add(new Tweet(idTweet, createdTime, text, retweetCount, favoriteCount,
+                        retweeted, favorited, user, mediaList, tweetUrlList));
             }
-        } catch (JSONException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return tweets;
     }
 
-    public static TwitterUser parseTwitterUser(String jsonStr){
+    public TwitterUser parseTwitterUser(String jsonStr){
         TwitterUser user = null;
         try {
             JSONArray jsonArray = new JSONArray(jsonStr);
             JSONObject jsonObj = jsonArray.getJSONObject(0);
-            long id = jsonObj.getLong("id");
-            String name = jsonObj.getString("name");
-            String screenName = jsonObj.getString("screen_name");
-            String profileImageUrl = jsonObj.getString("profile_image_url_https");
+            long id = jsonObj.getLong(KEY_ID);
+            String name = jsonObj.getString(KEY_NAME);
+            String screenName = jsonObj.getString(KEY_SCREEN_NAME);
+            String profileImageUrl = jsonObj.getString(KEY_PROFILE_IMAGE_URL_HTTPS);
             user = new TwitterUser(id, name, screenName, profileImageUrl);
         } catch (JSONException e) {
             e.printStackTrace();

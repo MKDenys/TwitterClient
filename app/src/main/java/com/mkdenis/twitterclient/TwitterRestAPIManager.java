@@ -2,7 +2,6 @@ package com.mkdenis.twitterclient;
 
 import android.util.Base64;
 import android.util.Log;
-import android.util.Pair;
 
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
@@ -18,14 +17,28 @@ public class TwitterRestAPIManager {
 
     private final static String CONSUMER_KEY = "i837a0S8sWQ6fvNpwQfBbXl8u";
     private final static String CONSUMER_SECRET = "MgZQFLFY6z04XFOvW0dl8cw1snSMAOInrOshBJ2sBuRnaJc0UE";
-    private final static String OAUTH_CONSUMER_KEY = "oauth_consumer_key";
-    private final static String OAUTH_TOKEN = "oauth_token";
-    private final static String OAUTH_SIGNATURE_METHOD = "oauth_signature_method";
-    private final static String OAUTH_TIMESTAMP = "oauth_timestamp";
-    private final static String OAUTH_NONCE = "oauth_nonce";
-    private final static String OAUTH_VERSION = "oauth_version";
-    private final static String OAUTH_SIGNATURE = "oauth_signature";
+    private final static String KEY_OAUTH_CONSUMER_KEY = "oauth_consumer_key";
+    private final static String KEY_OAUTH_TOKEN = "oauth_token";
+    private final static String OAUTH_TOKEN = PreferenceSettingsManager.getOAuthToken();
+    private final static String KEY_OAUTH_SIGNATURE_METHOD = "oauth_signature_method";
+    private final static String OAUTH_SIGNATURE_METHOD = "HMAC-SHA1";
+    private final static String KEY_OAUTH_TIMESTAMP = "oauth_timestamp";
+    private final static String KEY_OAUTH_NONCE = "oauth_nonce";
+    private final static String KEY_OAUTH_VERSION = "oauth_version";
+    private final static String OAUTH_VERSION = "1.0";
+    private final static String KEY_OAUTH_SIGNATURE = "oauth_signature";
     private final static String HMAC_SHA1_ALGORITHM = "HmacSHA1";
+    private final static String OAUTH_SECRET = PreferenceSettingsManager.getOAuthSecret();
+    private static final String KEY_HOST = "Host";
+    private static final String HOST = "api.twitter.com";
+    private static final String KEY_USER_AGENT = "User-Agent";
+    private static final String USER_AGENT = "MKTwitterClient";
+    private static final String KEY_ACCEPT_ENCODING = "Accept-Encoding";
+    private static final String ENCODING = "UTF-8";
+    private static final String KEY_CONTENT_TYPE = "Content-Type";
+    private static final String CONTENT_TYPE = "application/x-www-form-urlencoded";
+    private static final String KEY_AUTHORIZATION = "Authorization";
+    private final static int NONCE_LENGTH = 11;
     private static TwitterRestAPIManager instance;
     
     public static TwitterRestAPIManager getInstance(){
@@ -38,115 +51,55 @@ public class TwitterRestAPIManager {
     private TwitterRestAPIManager() {}
 
     private void setRequestProperty(HttpURLConnection connection, String httpMethod, String authorizationValue){
-        Pair<String, String> host = new Pair("Host", "api.twitter.com");
-        Pair<String, String> userAgent = new Pair("User-Agent", "MKTwitterClient");
-        Pair<String, String> acceptEncoding = new Pair("Accept-Encoding", "UTF-8");
-        Pair<String, String> contentType = new Pair("Content-Type", "application/x-www-form-urlencoded");
-        Pair<String, String> authorization = new Pair("Authorization", authorizationValue);
         try {
             connection.setRequestMethod(httpMethod);
-            connection.setRequestProperty(host.first, host.second);
-            connection.setRequestProperty(userAgent.first, userAgent.second);
-            connection.setRequestProperty(acceptEncoding.first, acceptEncoding.second);
-            connection.setRequestProperty(contentType.first, contentType.second);
-            connection.setRequestProperty(authorization.first, authorization.second);
+            connection.setRequestProperty(KEY_HOST, HOST);
+            connection.setRequestProperty(KEY_USER_AGENT, USER_AGENT);
+            connection.setRequestProperty(KEY_ACCEPT_ENCODING, ENCODING);
+            connection.setRequestProperty(KEY_CONTENT_TYPE, CONTENT_TYPE);
+            connection.setRequestProperty(KEY_AUTHORIZATION, authorizationValue);
         } catch (ProtocolException e) {
             e.printStackTrace();
         }
     }
 
-    public HttpURLConnection httpGetTwitterAPI(String urlAPI) throws Exception{
+    public HttpURLConnection httpRequestTwitterAPI(String httpMethod, String urlAPI) throws Exception{
         HttpURLConnection connection;
         URL url = new URL(urlAPI);
         connection =  (HttpURLConnection) url.openConnection();
-        final String HTTP_METHOD = "GET";
-        String oauth = getAuthorizationParam(HTTP_METHOD, urlAPI);
-     //   getApplicationOnlyToken(CONSUMER_KEY, CONSUMER_SECRET);
-     //   String oauth = "Bearer " + PreferenceSettingsManager.getString("access_token");
-        setRequestProperty(connection, HTTP_METHOD, oauth);
+        String oauth = getAuthorizationParam(httpMethod, urlAPI);
+        setRequestProperty(connection, httpMethod, oauth);
         return connection;
     }
 
-    public void getApplicationOnlyToken(String cosumerKey, String consumerSecret) {
-        URL url;
-        HttpURLConnection connection = null;
-        try {
-            url = new URL(TwitterAPIURL.APPLICATION_ONLY_OAUTH);
-            connection = (HttpURLConnection) url.openConnection();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        String urlApiKey = percentEncode(cosumerKey);
-        String urlApiSecret = percentEncode(consumerSecret);
-        String combined = urlApiKey + ":" + urlApiSecret;
-        String base64Encoded = Base64.encodeToString(combined.getBytes(), Base64.NO_WRAP);
-        String authorizationValue = "Basic " + base64Encoded;
-        String httpMethod = "POST";
-        setRequestProperty(connection, httpMethod, authorizationValue);
-        final HttpURLConnection con = connection;
-        String body = "grant_type=client_credentials";
-        WriteRequest writeRequest = new WriteRequest(con, body, new OnEventListener() {
-            @Override
-            public void onSuccess(Object object, int eventType) {
-                if ((boolean) object){
-                    ReadResponse readResponse = new ReadResponse(con, new OnEventListener() {
-                        @Override
-                        public void onSuccess(Object object, int eventType) {
-                            String accessToken = JSONParser.parseAccessToken((String) object);
-                            PreferenceSettingsManager.addString("access_token", accessToken);
-                        }
-
-                        @Override
-                        public void onFailure(Exception e) {
-                        }
-                    }, OnEventListener.LOAD_ACCESS_TOKEN);
-                    readResponse.execute();
-                }
-            }
-            @Override
-            public void onFailure(Exception e) {
-            }
-        }, OnEventListener.LOAD_ACCESS_TOKEN);
-        writeRequest.execute();
-    }
-
     private String getAuthorizationParam(String httpMethod, String url) {
-        String oauthConsumerKey = CONSUMER_KEY;
-        String oauthToken = PreferenceSettingsManager.getString("oauth_token");
-        String oauthSignatureMethod = "HMAC-SHA1";
         String oauthTimestamp = String.valueOf(System.currentTimeMillis() / 1000);
-        byte[] nonce = new byte[8];
+        byte[] nonce = new byte[NONCE_LENGTH];
         new Random().nextBytes(nonce);
-        String oauthNonce =  Base64.encodeToString(nonce, Base64.URL_SAFE).substring(0, 11);
-        String oauthVersion = "1.0";
-        String oauthSignature = creatingSignatures(oauthSignatureMethod, oauthTimestamp, oauthNonce,
-                oauthVersion, httpMethod, url);
+        String oauthNonce =  Base64.encodeToString(nonce, Base64.URL_SAFE).substring(0, NONCE_LENGTH);
+        String oauthSignature = creatingSignatures(oauthTimestamp, oauthNonce, httpMethod, url);
         String result = "OAuth ";
-        result += OAUTH_CONSUMER_KEY + "=\"" + oauthConsumerKey + "\","
-                + OAUTH_TOKEN + "=\"" + oauthToken + "\","
-                + OAUTH_SIGNATURE_METHOD + "=\"" + oauthSignatureMethod + "\","
-                + OAUTH_TIMESTAMP + "=\"" + oauthTimestamp + "\","
-                + OAUTH_NONCE + "=\"" + oauthNonce + "\","
-                + OAUTH_VERSION + "=\"" + oauthVersion + "\","
-                + OAUTH_SIGNATURE + "=\"" + oauthSignature + "\"";
+        result += KEY_OAUTH_CONSUMER_KEY + "=\"" + CONSUMER_KEY + "\","
+                + KEY_OAUTH_TOKEN + "=\"" + OAUTH_TOKEN + "\","
+                + KEY_OAUTH_SIGNATURE_METHOD + "=\"" + OAUTH_SIGNATURE_METHOD + "\","
+                + KEY_OAUTH_TIMESTAMP + "=\"" + oauthTimestamp + "\","
+                + KEY_OAUTH_NONCE + "=\"" + oauthNonce + "\","
+                + KEY_OAUTH_VERSION + "=\"" + OAUTH_VERSION + "\","
+                + KEY_OAUTH_SIGNATURE + "=\"" + oauthSignature + "\"";
         return result;
     }
 
     private String percentEncode(String value) {
         String encoded = "";
         try {
-            encoded = URLEncoder.encode(value, "UTF-8");
+            encoded = URLEncoder.encode(value, ENCODING);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return encoded;
     }
 
-    private String creatingSignatures(String oauthSignatureMethod, String oauthTimestamp, String oauthNonce,
-                                      String oauthVersion, String httpMethod, String url){
-    /*algorithm:
-    https://dev.twitter.com/oauth/overview/creating-signatures */
-    //Collecting and sort parameters by alphabetical
+    private String creatingSignatures(String oauthTimestamp, String oauthNonce, String httpMethod, String url){
         String baseUrl;
         String paramUrl = "";
         if (url.indexOf("?") > 0) {
@@ -157,13 +110,12 @@ public class TwitterRestAPIManager {
             baseUrl = url;
             paramUrl = "";
         }
-        String oauthToken = PreferenceSettingsManager.getString("oauth_token");
-        String paramStr =  percentEncode(OAUTH_CONSUMER_KEY) + "=" + percentEncode(CONSUMER_KEY) + "&"
-                + percentEncode(OAUTH_NONCE) + "=" + percentEncode(oauthNonce) + "&"
-                + percentEncode(OAUTH_SIGNATURE_METHOD) + "=" + percentEncode(oauthSignatureMethod) + "&"
-                + percentEncode(OAUTH_TIMESTAMP) + "=" + percentEncode(oauthTimestamp) + "&"
-                + percentEncode(OAUTH_TOKEN) + "=" + percentEncode(oauthToken) + "&"
-                + percentEncode(OAUTH_VERSION) + "=" + percentEncode(oauthVersion) + "&"
+        String paramStr =  percentEncode(KEY_OAUTH_CONSUMER_KEY) + "=" + percentEncode(CONSUMER_KEY) + "&"
+                + percentEncode(KEY_OAUTH_NONCE) + "=" + percentEncode(oauthNonce) + "&"
+                + percentEncode(KEY_OAUTH_SIGNATURE_METHOD) + "=" + percentEncode(OAUTH_SIGNATURE_METHOD) + "&"
+                + percentEncode(KEY_OAUTH_TIMESTAMP) + "=" + percentEncode(oauthTimestamp) + "&"
+                + percentEncode(KEY_OAUTH_TOKEN) + "=" + percentEncode(OAUTH_TOKEN) + "&"
+                + percentEncode(KEY_OAUTH_VERSION) + "=" + percentEncode(OAUTH_VERSION) + "&"
                 + paramUrl;
         String[] param = paramStr.split("&");
         Arrays.sort(param);
@@ -174,31 +126,29 @@ public class TwitterRestAPIManager {
             else
                 paramStr += param[i];
         }
-    //Creating the signature base string
         String persentEncodedBaseUrl = percentEncode(baseUrl);
         String persentEncodedParamStr = percentEncode(paramStr);
         String signatureBaseString = httpMethod.toUpperCase() + "&" + persentEncodedBaseUrl
                 + "&" + persentEncodedParamStr;
-    //Getting a signing key
         String persentConsumerSecret = percentEncode(CONSUMER_SECRET);
-        String persentEncodedOAuthSecret = percentEncode(PreferenceSettingsManager.getString("oauth_secret"));
+        String persentEncodedOAuthSecret = percentEncode(OAUTH_SECRET);
         String signingKey = persentConsumerSecret + "&" + persentEncodedOAuthSecret;
-    //Calculating the signature
-        String oauthSignature = Base64.encodeToString(calculateRFC2104HMAC(signatureBaseString, signingKey), Base64.NO_WRAP);
-        oauthSignature = percentEncode(oauthSignature);
+        String oauthSignature = "";
+        try {
+            oauthSignature = Base64.encodeToString(calculateRFC2104HMAC(signatureBaseString, signingKey),
+                    Base64.NO_WRAP);
+            oauthSignature = percentEncode(oauthSignature);
+        }
+        catch (Exception e){
+            Log.d("!!!!!!!!!!!!!!!", "creatingSignatures: " + e.toString());
+        }
         return oauthSignature;
     }
 
-    private byte[] calculateRFC2104HMAC(String data, String key) {
+    private byte[] calculateRFC2104HMAC(String data, String key) throws Exception {
         SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
-        Mac mac = null;
-        try {
-            mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
-            mac.init(signingKey);
-        }
-        catch (Exception e){
-            Log.d("!!!!!!!!!!!!!!!", "calculateRFC2104HMAC: " + e.toString());
-        }
+        Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
+        mac.init(signingKey);
         return mac.doFinal(data.getBytes());
     }
 }
