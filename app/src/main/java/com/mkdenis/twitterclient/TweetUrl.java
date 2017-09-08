@@ -1,9 +1,10 @@
 package com.mkdenis.twitterclient;
 
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class TweetUrl implements Serializable{
+public class TweetUrl implements Parcelable{
     private final String url;
     private final String expandedUrl;
     private final String displayUrl;
@@ -26,5 +27,33 @@ public class TweetUrl implements Serializable{
         return this.displayUrl;
     }
 
+    protected TweetUrl(Parcel in) {
+        this.url = in.readString();
+        this.expandedUrl = in.readString();
+        this.displayUrl = in.readString();
+    }
 
+    public static final Creator<TweetUrl> CREATOR = new Creator<TweetUrl>() {
+        @Override
+        public TweetUrl createFromParcel(Parcel in) {
+            return new TweetUrl(in);
+        }
+
+        @Override
+        public TweetUrl[] newArray(int size) {
+            return new TweetUrl[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.url);
+        dest.writeString(this.expandedUrl);
+        dest.writeString(this.displayUrl);
+    }
 }

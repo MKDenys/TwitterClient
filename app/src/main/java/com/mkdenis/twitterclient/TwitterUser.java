@@ -1,9 +1,10 @@
 package com.mkdenis.twitterclient;
 
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class TwitterUser implements Serializable {
+public class TwitterUser implements Parcelable {
     private final long id;
     private final String name;
     private final String screenName;
@@ -14,6 +15,13 @@ public class TwitterUser implements Serializable {
         this.name = name;
         this.screenName = screenName;
         this.profileImageUrl = profileImageUrl;
+    }
+
+    protected TwitterUser(Parcel in) {
+        this.id = in.readLong();
+        this.name = in.readString();
+        this.screenName = in.readString();
+        this.profileImageUrl = in.readString();
     }
 
     public String getName(){
@@ -30,5 +38,30 @@ public class TwitterUser implements Serializable {
 
     public long getId(){
         return this.id;
+    }
+
+    public static final Creator<TwitterUser> CREATOR = new Creator<TwitterUser>() {
+        @Override
+        public TwitterUser createFromParcel(Parcel in) {
+            return new TwitterUser(in);
+        }
+
+        @Override
+        public TwitterUser[] newArray(int size) {
+            return new TwitterUser[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(id);
+        dest.writeString(name);
+        dest.writeString(screenName);
+        dest.writeString(profileImageUrl);
     }
 }

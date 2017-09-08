@@ -9,6 +9,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -50,9 +51,9 @@ public class TwitterRestAPIManager {
 
     private TwitterRestAPIManager() {}
 
-    private void setRequestProperty(HttpURLConnection connection, String httpMethod, String authorizationValue){
+    private void setRequestProperty(HttpURLConnection connection, HTTPMethods httpMethod, String authorizationValue){
         try {
-            connection.setRequestMethod(httpMethod);
+            connection.setRequestMethod(httpMethod.name());
             connection.setRequestProperty(KEY_HOST, HOST);
             connection.setRequestProperty(KEY_USER_AGENT, USER_AGENT);
             connection.setRequestProperty(KEY_ACCEPT_ENCODING, ENCODING);
@@ -63,7 +64,7 @@ public class TwitterRestAPIManager {
         }
     }
 
-    public HttpURLConnection httpRequestTwitterAPI(String httpMethod, String urlAPI) throws Exception{
+    public HttpURLConnection httpRequestTwitterAPI(HTTPMethods httpMethod, String urlAPI) throws Exception{
         HttpURLConnection connection;
         URL url = new URL(urlAPI);
         connection =  (HttpURLConnection) url.openConnection();
@@ -72,8 +73,8 @@ public class TwitterRestAPIManager {
         return connection;
     }
 
-    private String getAuthorizationParam(String httpMethod, String url) {
-        String oauthTimestamp = String.valueOf(System.currentTimeMillis() / 1000);
+    private String getAuthorizationParam(HTTPMethods httpMethod, String url) {
+        String oauthTimestamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) + "";
         byte[] nonce = new byte[NONCE_LENGTH];
         new Random().nextBytes(nonce);
         String oauthNonce =  Base64.encodeToString(nonce, Base64.URL_SAFE).substring(0, NONCE_LENGTH);
@@ -99,7 +100,7 @@ public class TwitterRestAPIManager {
         return encoded;
     }
 
-    private String creatingSignatures(String oauthTimestamp, String oauthNonce, String httpMethod, String url){
+    private String creatingSignatures(String oauthTimestamp, String oauthNonce, HTTPMethods httpMethod, String url){
         String baseUrl;
         String paramUrl = "";
         if (url.indexOf("?") > 0) {
@@ -128,7 +129,7 @@ public class TwitterRestAPIManager {
         }
         String persentEncodedBaseUrl = percentEncode(baseUrl);
         String persentEncodedParamStr = percentEncode(paramStr);
-        String signatureBaseString = httpMethod.toUpperCase() + "&" + persentEncodedBaseUrl
+        String signatureBaseString = httpMethod.name() + "&" + persentEncodedBaseUrl
                 + "&" + persentEncodedParamStr;
         String persentConsumerSecret = percentEncode(CONSUMER_SECRET);
         String persentEncodedOAuthSecret = percentEncode(OAUTH_SECRET);

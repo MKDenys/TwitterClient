@@ -7,11 +7,11 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -24,6 +24,8 @@ import com.twitter.sdk.android.tweetcomposer.ComposerActivity;
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class UserActivity extends AppCompatActivity{
@@ -36,6 +38,7 @@ public class UserActivity extends AppCompatActivity{
     private JSONParser jsonParser;
     private static final String KEY_TWEET_LIST = "TWEET_LIST";
     private static final String KEY_PROFILE_IMAGE = "PROFILE_IMAGE";
+    private TweetListAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +50,20 @@ public class UserActivity extends AppCompatActivity{
         this.jsonParser = new JSONParser();
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         this.recyclerViewTimeline.setLayoutManager(layoutManager);
-        TweetListAdapter adapterEmpty = new TweetListAdapter(this);
-        this.recyclerViewTimeline.setAdapter(adapterEmpty);
+        if (savedInstanceState == null){
+            this.adapter = new TweetListAdapter(this, Collections.EMPTY_LIST);
+            loadTweets();
+            setProfileImage();
+        } else {
+            List<Tweet> tweets = savedInstanceState.getParcelableArrayList(KEY_TWEET_LIST);
+            this.adapter = new TweetListAdapter(this, tweets);
+            byte[] profileImageByteArray = savedInstanceState.getByteArray(KEY_PROFILE_IMAGE);
+            this.imageViewProfileImage.setImageBitmap(byteArrayToBitmap(profileImageByteArray));
+        }
+        this.recyclerViewTimeline.setAdapter(this.adapter);
+        this.recyclerViewTimeline.setHasFixedSize(true);
+        this.swipeRefreshLayout.setColorSchemeColors(Color.RED, Color.GREEN, Color.BLUE, Color.CYAN);
+        this.swipeRefreshLayout.setOnRefreshListener(this.onRefreshListener);
         this.recyclerViewTimeline.addOnScrollListener(new EndlessRecyclerViewScrollListener((LinearLayoutManager) layoutManager) {
             @Override
             public void onLoadMore(RecyclerView view) {
@@ -60,33 +75,14 @@ public class UserActivity extends AppCompatActivity{
                 });
             }
         });
-        this.recyclerViewTimeline.setHasFixedSize(true);
-        this.swipeRefreshLayout.setColorSchemeColors(Color.RED, Color.GREEN, Color.BLUE, Color.CYAN);
-        this.swipeRefreshLayout.setOnRefreshListener(this.onRefreshListener);
-        if (savedInstanceState == null){
-            loadTweets();
-            setProfileImage();
-        }
     }
 
     protected void onSaveInstanceState(Bundle outState) {
-        TweetListAdapter adapter = (TweetListAdapter) this.recyclerViewTimeline.getAdapter();
-        outState.putSerializable(KEY_TWEET_LIST, (Serializable) adapter.getTweets());
+        outState.putParcelableArrayList(KEY_TWEET_LIST, (ArrayList<Tweet>) this.adapter.getTweets());
         byte[] profileImageByteArray = bitmapToByteArray(
                 ((BitmapDrawable)imageViewProfileImage.getDrawable()).getBitmap());
         outState.putByteArray(KEY_PROFILE_IMAGE, profileImageByteArray);
         super.onSaveInstanceState(outState);
-        Log.d("!!!!!!!!!!!!!!!", "onSaveInstanceState: ");
-    }
-
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        List<Tweet> tweets = (List<Tweet>) savedInstanceState.getSerializable(KEY_TWEET_LIST);
-        TweetListAdapter adapter = new TweetListAdapter(this, tweets);
-        recyclerViewTimeline.setAdapter(adapter);
-        byte[] profileImageByteArray = savedInstanceState.getByteArray(KEY_PROFILE_IMAGE);
-        imageViewProfileImage.setImageBitmap(byteArrayToBitmap(profileImageByteArray));
-        Log.d("!!!!!!!!!!!!!!!", "onRestoreInstanceState: ");
     }
 
     private void findView() {
@@ -133,8 +129,7 @@ public class UserActivity extends AppCompatActivity{
     }
 
     private void loadPreviousTweets(){
-        TweetListAdapter adapter = (TweetListAdapter) this.recyclerViewTimeline.getAdapter();
-        long maxId = adapter.getOldestTweetId();
+        long maxId = this.adapter.getOldestTweetId();
         if (maxId > 0) {
             String url = TwitterAPIURL.HOME_TIMELINE + "?max_id=" + maxId;
             try {
@@ -149,13 +144,12 @@ public class UserActivity extends AppCompatActivity{
     }
 
     private void loadNewTweets(){
-        TweetListAdapter adapter = (TweetListAdapter) this.recyclerViewTimeline.getAdapter();
-        long sinceId = adapter.getNewestTweetId();
+        long sinceId = this.adapter.getNewestTweetId();
         if (sinceId > 0) {
             String url = TwitterAPIURL.HOME_TIMELINE + "?since_id=" + sinceId;
             try {
                 HttpURLConnection connection = TwitterRestAPIManager.getInstance().
-                        httpRequestTwitterAPI(HTTPMethods.GET,url);
+                        httpRequestTwitterAPI(HTTPMethods.GET, url);
                 ReadResponse readResponse = new ReadResponse(connection, this.onLoadNewTweets);
                 readResponse.execute();
             } catch (Exception e) {
@@ -169,8 +163,7 @@ public class UserActivity extends AppCompatActivity{
         @Override
         public void onSuccess(Object object) {
             List<Tweet> tweets = jsonParser.parseTimeline((String) object);
-            TweetListAdapter adapter = new TweetListAdapter(UserActivity.this, tweets);
-            recyclerViewTimeline.setAdapter(adapter);
+            adapter.setTweets(tweets);
         }
 
         @Override
@@ -184,7 +177,6 @@ public class UserActivity extends AppCompatActivity{
         public void onSuccess(Object object) {
             List<Tweet> tweets = jsonParser.parseTimeline((String) object);
             if (tweets.size() > 0) {
-                TweetListAdapter adapter = (TweetListAdapter) recyclerViewTimeline.getAdapter();
                 adapter.addListToTop(tweets);
             }
             swipeRefreshLayout.setRefreshing(false);
@@ -201,7 +193,6 @@ public class UserActivity extends AppCompatActivity{
         public void onSuccess(Object object) {
             List<Tweet> tweets = jsonParser.parseTimeline((String) object);
             if (tweets.size() > 0) {
-                TweetListAdapter adapter = (TweetListAdapter) recyclerViewTimeline.getAdapter();
                 adapter.addListToBottom(tweets);
             }
         }
@@ -241,25 +232,25 @@ public class UserActivity extends AppCompatActivity{
     private final View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            switch (v.getId()) {
-                case R.id.button_new_tweet: {
-                    TwitterSession session = TwitterCore.getInstance().getSessionManager()
-                            .getActiveSession();
-                    Intent intent = new ComposerActivity.Builder(UserActivity.this)
-                            .session(session)
-                            .text("")
-                            .hashtags("")
-                            .createIntent();
-                    startActivity(intent);
-                    break;
-                }
-                case R.id.button_logout: {
-                    LogOut logOut = new LogOut();
-                    logOut.logOutUser();
-                    finish();
-                    break;
-                }
+        switch (v.getId()) {
+            case R.id.button_new_tweet: {
+                TwitterSession session = TwitterCore.getInstance().getSessionManager()
+                        .getActiveSession();
+                Intent intent = new ComposerActivity.Builder(UserActivity.this)
+                        .session(session)
+                        .text("")
+                        .hashtags("")
+                        .createIntent();
+                startActivity(intent);
+                break;
             }
+            case R.id.button_logout: {
+                LogOut logOut = new LogOut();
+                logOut.logOutUser();
+                finish();
+                break;
+            }
+        }
         }
     };
 }

@@ -19,44 +19,38 @@ public class PreferenceSettingsManager {
     }
 
     public static void setOAuthToken(String token){
-        editor.putString(KEY_OAUTH_TOKEN, token);
-        editor.commit();
+        editor.putString(KEY_OAUTH_TOKEN, token).commit();
     }
 
     public static String getOAuthToken(){
-        return sharedPreferences.getString(KEY_OAUTH_TOKEN, null);
+        return sharedPreferences.getString(KEY_OAUTH_TOKEN, "");
     }
 
     public static void removeOAuthToken() {
-        editor.remove(KEY_OAUTH_TOKEN);
-        editor.commit();
+        editor.remove(KEY_OAUTH_TOKEN).commit();
     }
 
     public static void setOAuthSecret(String secret){
-        editor.putString(KEY_OAUTH_SECRET, secret);
-        editor.commit();
+        editor.putString(KEY_OAUTH_SECRET, secret).commit();
     }
 
     public static String getOAuthSecret(){
-        return sharedPreferences.getString(KEY_OAUTH_SECRET, null);
+        return sharedPreferences.getString(KEY_OAUTH_SECRET, "");
     }
 
     public static void removeOAuthSecret() {
-        editor.remove(KEY_OAUTH_SECRET);
-        editor.commit();
+        editor.remove(KEY_OAUTH_SECRET).commit();
     }
 
     public static void setUserName(String userName){
-        editor.putString(KEY_USER_NAME, userName);
-        editor.commit();
+        editor.putString(KEY_USER_NAME, userName).commit();
     }
 
     public static String getUserName(){
-        return sharedPreferences.getString(KEY_USER_NAME, null);
+        return sharedPreferences.getString(KEY_USER_NAME, "");
     }
 
     public static void removeUserName() {
-        editor.remove(KEY_USER_NAME);
-        editor.commit();
+        editor.remove(KEY_USER_NAME).commit();
     }
 }

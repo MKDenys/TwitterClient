@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="profile_image_width">60dp</dimen>
+    <dimen name="profile_image_height">60dp</dimen>
+    <dimen name="profile_image_paddingLeft">5dp</dimen>
+    <dimen name="profile_image_paddingTop">5dp</dimen>
+    <dimen name="linearLayout_user_name_paddingLeft">10dp</dimen>
+    <dimen name="textView_name_paddingLeft">5dp</dimen>
+    <dimen name="textView_screen_name_paddingLeft">5dp</dimen>
+    <dimen name="textView_created_time_paddingLeft">5dp</dimen>
+    <dimen name="textView_tweet_text_paddingLeft">2dp</dimen>
+    <dimen name="imageView_retweet_width">30dp</dimen>
+    <dimen name="imageView_retweet_height">30dp</dimen>
+    <dimen name="imageView_favorite_width">30dp</dimen>
+    <dimen name="imageView_favorite_height">30dp</dimen>
+    <dimen name="imageView_favorite_marginLeft">20dp</dimen>
+    <dimen name="linearLayout_bottom_marginBottom">2dp</dimen>
+    <dimen name="linearLayout_bottom_marginTop">2dp</dimen>
+    <dimen name="tweet_image_margin">5dp</dimen>
+</resources>

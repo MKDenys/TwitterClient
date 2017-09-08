@@ -10,9 +10,7 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="8dp">
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -22,20 +20,21 @@
 
             <ImageView
                 android:id="@+id/imageView_main_profile_image"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="@dimen/profile_image_width"
+                android:layout_height="@dimen/profile_image_height"
                 android:adjustViewBounds="true"
-                android:paddingLeft="5dp"
-                android:paddingTop="5dp"
+                android:paddingLeft="@dimen/profile_image_paddingLeft"
+                android:paddingTop="@dimen/profile_image_paddingTop"
                 app:srcCompat="@mipmap/ic_launcher" />
 
             <LinearLayout
-                android:layout_width="171dp"
+                android:id="@+id/linearLayout_user_name"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_weight="0.43"
+                android:layout_weight="0.90"
                 android:orientation="vertical"
-                android:paddingLeft="10dp">
+                android:paddingLeft="@dimen/linearLayout_user_name_paddingLeft">
 
                 <TextView
                     android:id="@+id/textView_user_name"

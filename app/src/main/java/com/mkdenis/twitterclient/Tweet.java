@@ -1,6 +1,8 @@
 package com.mkdenis.twitterclient;
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.ParseException;
@@ -9,7 +11,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class Tweet implements Serializable{
+public class Tweet implements Parcelable{
     private final long id;
     private final Date createdTime;
     private final String text;
@@ -38,6 +40,19 @@ public class Tweet implements Serializable{
         this.createdTime = dateFromTwitterFormatString(createdTime);
         this.tweetUrls = tweetUrls;
         this.text = transformToDisplaedText(text);
+    }
+
+    protected Tweet(Parcel in) {
+        this.id = in.readLong();
+        this.createdTime = new Date(in.readLong());
+        this.text = in.readString();
+        this.retweetCount = in.readInt();
+        this.favoriteCount = in.readInt();
+        this.retweeted = in.readByte() != 0;
+        this.favorited = in.readByte() != 0;
+        this.twitterUser = in.readParcelable(TwitterUser.class.getClassLoader());
+        this.twitterMedia = in.createTypedArrayList(TwitterMedia.CREATOR);
+        this.tweetUrls = in.createTypedArrayList(TweetUrl.CREATOR);
     }
 
     private String transformToDisplaedText(String text){
@@ -126,5 +141,36 @@ public class Tweet implements Serializable{
 
     public List<TweetUrl> getTweetUrls() {
         return tweetUrls;
+    }
+
+    public static final Creator<Tweet> CREATOR = new Creator<Tweet>() {
+        @Override
+        public Tweet createFromParcel(Parcel in) {
+            return new Tweet(in);
+        }
+
+        @Override
+        public Tweet[] newArray(int size) {
+            return new Tweet[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(this.id);
+        dest.writeLong(this.createdTime.getTime());
+        dest.writeString(this.text);
+        dest.writeInt(this.retweetCount);
+        dest.writeInt(this.favoriteCount);
+        dest.writeByte((byte) (this.retweeted ? 1 : 0));
+        dest.writeByte((byte) (this.favorited ? 1 : 0));
+        dest.writeParcelable(this.twitterUser, flags);
+        dest.writeTypedList(this.twitterMedia);
+        dest.writeTypedList(this.tweetUrls);
     }
 }

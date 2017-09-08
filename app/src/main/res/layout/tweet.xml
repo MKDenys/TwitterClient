@@ -7,8 +7,8 @@
 
     <ImageView
         android:id="@+id/imageView_profile_image"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="@dimen/profile_image_width"
+        android:layout_height="@dimen/profile_image_height"
         android:adjustViewBounds="true"
         app:srcCompat="@drawable/tw__composer_logo_blue" />
 
@@ -27,21 +27,21 @@
                 android:id="@+id/textView_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingLeft="5dp"
+                android:paddingLeft="@dimen/textView_name_paddingLeft"
                 android:text="name" />
 
             <TextView
                 android:id="@+id/textView_screen_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingLeft="5dp"
+                android:paddingLeft="@dimen/textView_screen_name_paddingLeft"
                 android:text="screen_name" />
 
             <TextView
                 android:id="@+id/textView_created_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingLeft="5dp"
+                android:paddingLeft="@dimen/textView_created_time_paddingLeft"
                 android:text="time" />
 
         </LinearLayout>
@@ -50,7 +50,7 @@
             android:id="@+id/textView_tweet_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="2dp"
+            android:paddingLeft="@dimen/textView_tweet_text_paddingLeft"
             android:text="TextView"
             android:autoLink="web"
             android:linksClickable="true"
@@ -73,20 +73,21 @@
         </HorizontalScrollView>
 
         <LinearLayout
+            android:id="@+id/linearLayout_bottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|center_horizontal"
-            android:layout_marginBottom="2dp"
-            android:layout_marginTop="2dp"
+            android:layout_marginBottom="@dimen/linearLayout_bottom_marginBottom"
+            android:layout_marginTop="@dimen/linearLayout_bottom_marginTop"
             android:layout_weight="0.40"
             android:orientation="horizontal"
             android:weightSum="1">
 
             <ImageView
                 android:id="@+id/imageView_retweet"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                app:srcCompat="@mipmap/retweet" />
+                android:layout_width="@dimen/imageView_retweet_width"
+                android:layout_height="@dimen/imageView_retweet_height"
+                app:srcCompat="@drawable/retweet" />
 
             <TextView
                 android:id="@+id/textView_retweet_count"
@@ -98,10 +99,10 @@
 
             <ImageView
                 android:id="@+id/imageView_favorite"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginLeft="20dp"
-                app:srcCompat="@mipmap/favorite" />
+                android:layout_width="@dimen/imageView_favorite_width"
+                android:layout_height="@dimen/imageView_favorite_height"
+                android:layout_marginLeft="@dimen/imageView_favorite_marginLeft"
+                app:srcCompat="@drawable/favorite" />
 
             <TextView
                 android:id="@+id/textView_favorite_count"
